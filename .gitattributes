@@ -1,0 +1,4 @@
+# This file is huge and doesn't contain anything really interesting, so exclude
+# it from diffs by default (this relies on having run something like
+# "git config --global diff.generated.command 'echo Diff of "$1" suppressed'")
+package-lock.json diff=generated

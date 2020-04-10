@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="assets/css/bootstrap.css">
+    <title>FrontPanel Test App</title>
+  </head>
+
+  <body>
+    <div id="modalConnect" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header text-center">
+            <h4 class="modal-title w-100 font-weight-bold">Connect to server</h4>
+          </div>
+          <div class="modal-body mx-3">
+            <label for="inputServer" class="sr-only">Server address</label>
+            <input id="inputServer" type="text" class="form-control my-1" placeholder="Enter server address" required autofocus value="wss://localhost:9999/">
+            <label for="inputUsername" class="sr-only">Username</label>
+            <input id="inputUsername" type="text" class="form-control my-1" placeholder="Enter your username" required>
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input id="inputPassword" type="password" id="inputPassword" class="form-control my-1" placeholder="******" required>
+          </div>
+          <div class="modal-footer d-flex justify-content-center">
+            <button id="buttonConnect" class="btn btn-lg btn-primary btn-block">Connect</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mainContent" class="container">
+      <div class="navbar">
+        <div class="container d-flex justify-content-between">
+          <div class="col-8 pt-1">
+            <img src="assets/images/opal-kelly-logo.png" width="196" height="44" alt="Opal Kelly">
+            <span class="text-muted">FPoIP Web API Sample</span>
+          </div>
+          <div class="align-items-center">
+            <span id="connectionStatus">Disconnected</span>
+            <a id="buttonStatus" class="btn btn-sm btn-info m-sm" href="#">Connect</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container my-4">
+      <h3>Devices</h3>
+      <select id="devicesList" class="w-100" size="5">
+      </select>
+    </div>
+
+    <div class="container mt-4 p-4 bg-dark text-light">
+      <h4>Log output</h4>
+      <div id="logWindow"></div>
+    </div>
+
+    <script src="assets/js/jquery.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/frontpanel-ws.js"></script>
+    <script src="assets/js/sample.js"></script>
+  </body>
+</html>

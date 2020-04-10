@@ -1,0 +1,105 @@
+{
+  "name": "frontpanel-ws",
+  "version": "0.1.0",
+  "description": "Front Panel Web API",
+  "author": "Opal Kelly <support@opalkelly.com>",
+  "main": "lib/frontpanel-ws.js",
+  "browser": "dist/frontpanel-ws.js",
+  "typings": "lib/frontpanel-ws.d.ts",
+  "repository": "",
+  "license": "MIT",
+  "keywords": [
+    "api",
+    "FPGA",
+    "FPOIP",
+    "FrontPanel",
+    "OpalKelly"
+  ],
+  "homepage": "https://opalkelly.com/",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/opalkelly-opensource/frontpanel-ws.git"
+  },
+  "bugs": {
+    "url": "https://forums.opalkelly.com/"
+  },
+  "scripts": {
+    "info": "npm-scripts-info",
+    "build": "run-s clean && run-s build:*",
+    "build:main": "tsc -p tsconfig.json",
+    "build-browser": "run-s build && run-s build-browser:*",
+    "build-browser:browserify": "browserify ./lib/FrontPanelAPI.js -o ./dist/frontpanel-ws.js --standalone frontpanelWs",
+    "prepare": "run-s build-browser",
+    "fix": "run-s fix:*",
+    "fix:prettier": "prettier \"@(src|regression)/**/*.ts\" --write",
+    "fix:tslint": "tslint --fix --project .",
+    "test": "run-s build test:*",
+    "test:lint": "tslint --project . && prettier \"@(src|regression)/**/*.ts\" --list-different",
+    "test:unit": "mocha -r ts-node/register src/**/*.spec.ts --timeout 2000",
+    "test:regression": "mocha -r ts-node/register regression/**/*.spec.ts --timeout 60000",
+    "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
+    "doc": "run-s doc:html && open-cli docs/index.html",
+    "doc:html": "typedoc --tsconfig tsconfig.json --mode file --out docs",
+    "doc:json": "typedoc --tsconfig tsconfig.json --mode file --json docs/typedoc.json",
+    "clean": "trash dist docs lib"
+  },
+  "scripts-info": {
+    "info": "Display information about the package scripts",
+    "build": "Clean and rebuild the project",
+    "build-browser": "Clean and rebuild dist/frontpanel-ws.js to use it from a browser",
+    "fix": "Try to automatically fix any linting problems",
+    "test": "Lint and unit test the project",
+    "watch": "Watch and rebuild the project on save, then rerun relevant tests",
+    "doc": "Generate HTML API documentation and open it in a browser",
+    "doc:json": "Generate API documentation in typedoc JSON format",
+    "clean": "Clean the project"
+  },
+  "engines": {
+    "node": ">=8.9"
+  },
+  "files": [
+    "/src",
+    "/lib",
+    "/dist"
+  ],
+  "dependencies": {
+    "@msgpack/msgpack": "^1.9.3",
+    "@types/node": "^12.11.1",
+    "@types/ws": "^6.0.3",
+    "isomorphic-ws": "^4.0.1",
+    "ws": "^7.2.0"
+  },
+  "devDependencies": {
+    "npm-scripts-info": "^0.3.9",
+    "typedoc": "^0.15.3",
+    "@types/chai": "^4.2.3",
+    "@types/chai-as-promised": "^7.1.2",
+    "@types/mocha": "^5.2.7",
+    "browserify": "^16.5.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "filereader": "^0.10.3",
+    "mocha": "^6.2.1",
+    "npm-run-all": "^4.1.5",
+    "open-cli": "^5.0.0",
+    "parcel-bundler": "^1.12.4",
+    "prettier": "^1.19.1",
+    "trash-cli": "^3.0.0",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.18.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-immutable": "^6.0.1",
+    "typescript": "^3.7.4"
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "all": true,
+    "check-coverage": true,
+    "exclude": [
+      "**/*.spec.js"
+    ]
+  }
+}
