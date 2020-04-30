@@ -50,6 +50,14 @@ export class FrontPanel {
     private wireOutValues: number[];
     private triggerOutValues: number[];
 
+    /**
+     * Initializes the object with the remote server address.
+     *
+     * The only mandatory parameter is `server` which specifies the remote
+     * server, running FPoIP server, to connect to.
+     *
+     * @param parameters Parameters that must include the server address.
+     */
     constructor(parameters: IConstructParameters) {
         this.ws = new AsyncWebSocket(
             parameters.server,
@@ -67,22 +75,27 @@ export class FrontPanel {
         this._resetValues();
     }
 
-    public get isConnecting(): boolean {
-        return this.ws.isOpening;
-    }
-
+    /**
+     * Returns true if the object is connected to the remote server.
+     *
+     * This value is initially `false` and becomes `true` once [[connect]]
+     * completes successfully.
+     *
+     * No other method of this class other than `connect()` can be used until
+     * this property becomes `true`.
+     */
     public get isConnected(): boolean {
         return this.ws.isOpened;
     }
 
-    public get isDisconnecting(): boolean {
-        return this.ws.isClosing;
-    }
-
-    public get isDisconnected(): boolean {
-        return this.ws.isClosed;
-    }
-
+    /**
+     * Initiates connection to the server.
+     *
+     * This async function will satisfy its promise when connecting succeeds
+     * or break it when it fails.
+     *
+     * See [[isConnected]].
+     */
     public async connect(): Promise<void> {
         try {
             await this.ws.open();
@@ -91,6 +104,12 @@ export class FrontPanel {
         }
     }
 
+    /**
+     * Initiates disconnection from the server.
+     *
+     * @param code Optional standard WebSocket close code explaining why the
+     * connection is being closed.
+     */
     public async disconnect(code?: number): Promise<void> {
         try {
             await this.ws.close(code);
@@ -99,6 +118,13 @@ export class FrontPanel {
         }
     }
 
+    /**
+     * Asynchronously waits for any unsolicited server reply.
+     *
+     * Unsolicited replies are sent by the server not in reply to a client
+     * request but due to an event on the server-side, e.g. new device
+     * connection.
+     */
     public async waitForServer(): Promise<IReply> {
         try {
             return this.ws.waitForServer();
@@ -107,6 +133,19 @@ export class FrontPanel {
         }
     }
 
+    /**
+     * Initiates login to the server.
+     *
+     * As the provided credentials are transmitted unencrypted, connection
+     * itself must be secure, i.e. use TLS.
+     *
+     * After successfully logging in, call [[openDevice]] to start working
+     * with one of the devices from the list returned by the server.
+     *
+     * @param username The username to use for authentication.
+     * @param password The password to use for authentication.
+     * @returns List of available devices in case of successful login.
+     */
     public async login(username: string, password: string): Promise<string[]> {
         const devices = await this._sendRequest(
             RequestCode.Login,
@@ -117,14 +156,33 @@ export class FrontPanel {
         return devices.data;
     }
 
+    /**
+     * Requests opening the specified device.
+     *
+     * Opening the device is required before using any functions other than
+     * [[connect]], [[login]] and [[disconnect]].
+     *
+     * @param device One of the devices returned from [[login]].
+     */
     public async openDevice(device: string): Promise<void> {
         await this._sendRequest(RequestCode.Open, device);
     }
 
+    /**
+     * Requests closing the currently opened device.
+     *
+     * [[openDevice]] can be called again, with the same or different device
+     * after calling this function.
+     */
     public async closeDevice(): Promise<void> {
         await this._sendRequest(RequestCode.CloseDevice);
     }
 
+    /**
+     * Requests information about the currently opened device.
+     *
+     * @returns [[IDeviceInfo]] object containing device characteristics.
+     */
     public async getDeviceInfo(): Promise<IDeviceInfo> {
         const info = await this._sendRequest(RequestCode.GetDeviceInfo);
         const result: Required<IDeviceInfo> = {
@@ -243,6 +301,11 @@ export class FrontPanel {
         await this._sendRequest(RequestCode.ResetFPGA);
     }
 
+    /**
+     * Configures the device with the given firmware data.
+     *
+     * @param buf Contains firmware data.
+     */
     public async configureFPGA(buf: Uint8Array): Promise<void> {
         // (Re)configuring the devices resets all wire/trigger values.
         this._resetValues();
@@ -550,7 +613,7 @@ export class FrontPanel {
         return result.data;
     }
 
-    public async _updateWireOuts(): Promise<number[]> {
+    private async _updateWireOuts(): Promise<number[]> {
         const numWireOuts = LAST_WIREOUT_ENDPOINT - FIRST_WIREOUT_ENDPOINT + 1;
 
         const result = await this._sendRequest(RequestCode.UpdateWireOuts);
@@ -601,9 +664,23 @@ export class FrontPanel {
     }
 }
 
-// Input parameters.
+/**
+ * Parameters for FrontPanel constructor.
+ */
 export interface IConstructParameters {
+    /**
+     * Mandatory: server to connect to.
+     *
+     * This string may include the port number.
+     */
     server: string;
+
+    /**
+     * Optional: specify if self-signed certificates are accepted.
+     *
+     * Specifying `true` for this parameter can be useful during development
+     * and testing.
+     */
     allowSelfSigned?: boolean;
 }
 

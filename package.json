@@ -1,10 +1,9 @@
 {
   "name": "@opalkelly/frontpanel-ws",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "description": "Front Panel Web API",
   "author": "Opal Kelly <support@opalkelly.com>",
   "main": "lib/frontpanel-ws.js",
-  "browser": "dist/frontpanel-ws.js",
   "typings": "lib/frontpanel-ws.d.ts",
   "repository": {
     "type": "git",
@@ -38,8 +37,8 @@
     "test:regression": "mocha -r ts-node/register regression/**/*.spec.ts --timeout 60000",
     "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
     "doc": "run-s doc:html && open-cli docs/index.html",
-    "doc:html": "typedoc --tsconfig tsconfig.json --mode file --out docs",
-    "doc:json": "typedoc --tsconfig tsconfig.json --mode file --json docs/typedoc.json",
+    "doc:html": "typedoc --tsconfig tsconfig.json --out docs",
+    "doc:json": "typedoc --tsconfig tsconfig.json --json docs/typedoc.json",
     "clean": "trash dist docs lib"
   },
   "scripts-info": {
@@ -69,8 +68,6 @@
     "ws": "^7.2.0"
   },
   "devDependencies": {
-    "npm-scripts-info": "^0.3.9",
-    "typedoc": "^0.15.3",
     "@types/chai": "^4.2.3",
     "@types/chai-as-promised": "^7.1.2",
     "@types/mocha": "^5.2.7",
@@ -80,6 +77,7 @@
     "filereader": "^0.10.3",
     "mocha": "^6.2.1",
     "npm-run-all": "^4.1.5",
+    "npm-scripts-info": "^0.3.9",
     "open-cli": "^5.0.0",
     "parcel-bundler": "^1.12.4",
     "prettier": "^1.19.1",
@@ -88,6 +86,7 @@
     "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-immutable": "^6.0.1",
+    "typedoc": "^0.15.8",
     "typescript": "^3.7.4"
   },
   "prettier": {

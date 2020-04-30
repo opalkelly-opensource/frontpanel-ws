@@ -4,6 +4,11 @@
 
 import * as frontpanelWs from '../FrontPanelAPI';
 
+enum HTTPResponseType {
+    ArrayBuffer,
+    Text
+}
+
 /**
  * This class encapsulates the basic functionality of a web application
  * using FrontPanel API via web socket interface.
@@ -33,8 +38,8 @@ export abstract class FrontPanelWebAppBase {
     /**
      * Whether the application is connected to the server.
      */
-    get connected(): boolean {
-        return this._fp !== undefined;
+    get isConnected(): boolean {
+        return this._fp !== undefined && this._fp.isConnected;
     }
 
     /**
@@ -84,7 +89,7 @@ export abstract class FrontPanelWebAppBase {
      * Disconnects from the server if connected (do nothing if not connected).
      */
     public async disconnect(): Promise<void> {
-        if (this.fp.isConnected) {
+        if (this.isConnected) {
             await this.fp.disconnect();
         }
         await this._setConnected(undefined);
@@ -187,21 +192,22 @@ export abstract class FrontPanelWebAppBase {
 
     /**
      * Asynchronously sends the `GET` request and returns the [[Promise]]
+     * which will be resolved with the response as an array buffer when the
+     * request is complete.
+     */
+    public async httpBinaryRequest(path: string): Promise<Uint8Array> {
+        const req = await this._httpRequest(path, HTTPResponseType.ArrayBuffer);
+        return new Uint8Array(req.response);
+    }
+
+    /**
+     * Asynchronously sends the `GET` request and returns the [[Promise]]
      * which will be resolved with the response text when the request is
      * complete.
      */
-    public async httpRequest(path: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const req = new XMLHttpRequest();
-            req.open('GET', path, true);
-            req.onerror = () => {
-                reject(`Failed to get the file: ${req.statusText}`);
-            };
-            req.onload = () => {
-                resolve(req.responseText);
-            };
-            req.send();
-        });
+    public async httpTextRequest(path: string): Promise<string> {
+        const req = await this._httpRequest(path, HTTPResponseType.Text);
+        return req.responseText;
     }
 
     /**
@@ -215,6 +221,26 @@ export abstract class FrontPanelWebAppBase {
      * occurred.
      */
     protected abstract async _updateConnectionStatus(): Promise<void>;
+
+    private async _httpRequest(
+        path: string,
+        responseType: HTTPResponseType
+    ): Promise<XMLHttpRequest> {
+        return new Promise((resolve, reject) => {
+            const req = new XMLHttpRequest();
+            req.open('GET', path, true);
+            if (responseType === HTTPResponseType.ArrayBuffer) {
+                req.responseType = 'arraybuffer';
+            }
+            req.onerror = () => {
+                reject(`Failed to get the file: ${req.statusText}`);
+            };
+            req.onload = () => {
+                resolve(req);
+            };
+            req.send();
+        });
+    }
 
     private async _readFile(file: Blob): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {

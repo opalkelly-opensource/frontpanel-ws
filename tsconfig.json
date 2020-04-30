@@ -19,6 +19,10 @@
     "lib": ["es2017", "dom"],
     "types": ["node"]
   },
+  "typedocOptions": {
+     "mode": "file",
+     "excludePrivate": true
+  },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"],
   "compileOnSave": false
