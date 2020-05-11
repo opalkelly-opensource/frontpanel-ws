@@ -1,6 +1,6 @@
 {
   "name": "@opalkelly/frontpanel-ws",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Front Panel Web API",
   "author": "Opal Kelly <support@opalkelly.com>",
   "main": "lib/frontpanel-ws.js",

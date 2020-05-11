@@ -364,10 +364,15 @@ export class AsyncWebSocket {
             } else {
                 const errorCode: ErrorCode = elements[0];
                 if (errorCode !== NoError) {
-                    replyError = new FrontPanelError(
-                        errorCode,
-                        `Reply #${replyId} failed`
-                    );
+                    let errorMessage = `Reply #${replyId} failed`;
+
+                    // Append the error description, if it isn't an empty string.
+                    const errorDescription: string = elements[1];
+                    if (errorDescription) {
+                        errorMessage += `: '${errorDescription}'`;
+                    }
+
+                    replyError = new FrontPanelError(errorCode, errorMessage);
                 }
             }
             elements.shift();
