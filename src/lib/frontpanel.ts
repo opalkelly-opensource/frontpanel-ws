@@ -23,7 +23,7 @@ export const FIRST_PIPEIN_ENDPOINT = 0x80;
 export const LAST_PIPEIN_ENDPOINT = 0x9f;
 export const FIRST_PIPEOUT_ENDPOINT = 0xa0;
 export const LAST_PIPEOUT_ENDPOINT = 0xbf;
-const PROTOCOL_VERSION = 18;
+const PROTOCOL_VERSION = 19;
 
 function makeError(e: any, msg: string) {
     const code = e instanceof FrontPanelError ? e.code : ErrorCode.Failed;
@@ -223,7 +223,8 @@ export class FrontPanel {
             fpgaVendor: info.data[22],
             interfaceCount: info.data[23],
             interfaceIndex: info.data[24],
-            configuresFromSystemFlash: info.data[25]
+            configuresFromSystemFlash: info.data[25],
+            hasQuadConfigFlash: info.data[26]
         };
         return result;
     }

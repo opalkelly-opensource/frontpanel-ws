@@ -61,6 +61,7 @@ describe('FrontPanel', () => {
         expect(info.serialNumber).to.have.lengthOf.at.most(
             MAX_SERIALNUMBER_LENGTH
         );
+        expect(info.hasQuadConfigFlash).to.equal(false);
     });
 
     it('should configure the device', async () => {

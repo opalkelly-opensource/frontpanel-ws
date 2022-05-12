@@ -136,6 +136,11 @@ export interface IDeviceInfo {
      * device is configured from its FPGA flash.
      */
     configuresFromSystemFlash: boolean;
+
+    /**
+     * True if the device flash has quad SPI I/O.
+     */
+    hasQuadConfigFlash: boolean;
 }
 
 export enum ProductID {
