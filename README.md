@@ -4,7 +4,7 @@ FrontPanel Web API
 The Javascript implementation of the client API to FrontPanel over IP (FPoIP)
 server.
 
-See https://docs.opalkelly.com/display/FPSDK/FPoIP+WebAPI.
+See https://docs.opalkelly.com/fpsdk/frontpanel-over-ip/fpoip-webapi/.
 
 Prerequisites
 -------
@@ -51,5 +51,6 @@ More command line options: https://www.browsersync.io/docs/command-line#start
 Docs
 -------
 
-Overview: https://docs.opalkelly.com/display/FPSDK/FPoIP+WebAPI
+Overview: https://docs.opalkelly.com/fpsdk/frontpanel-over-ip/fpoip-webapi/
+
 API Reference: https://library.opalkelly.com/library/FrontPanelWebAPI/index.html
