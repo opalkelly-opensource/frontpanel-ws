@@ -321,6 +321,22 @@ export class FrontPanel {
         await this._sendRequest(RequestCode.ActivateTriggerIn, epAddr, bit);
     }
 
+
+    /**
+     * Reads a string of bytes from the target Flash Memory address.
+     *
+     * @param addr Flash memory address.
+     * @param length Length of data (in bytes).
+     */
+    public async flashRead(addr: number, length: number): Promise<Uint8Array> {
+        const result = await this._sendRequest(
+            RequestCode.FlashRead,
+            addr,
+            length
+        );
+        return result.data;
+    }
+
     /**
      * This method reads a string of bytes from the target I2C address. This
      * transfer does not utilize the FPGA and can be done prior to configuration.
@@ -564,6 +580,25 @@ export class FrontPanel {
     }
 
     /**
+     * Erases a flash memory sector at the specified address.
+     *
+     * @param addr Flash memory address.
+     */
+    public async flashEraseSector(addr: number): Promise<void> {
+        await this._sendRequest(RequestCode.FlashEraseSector, addr);
+    }
+
+    /**
+     * Writes a string of bytes to the target Flash memory address.
+     *
+     * @param addr Flash memory address.
+     * @param buf Data to be written.
+     */
+    public async flashWrite(addr: number, buf: Uint8Array): Promise<void> {
+        await this._sendRequest(RequestCode.FlashWrite, addr, buf);
+    }
+
+    /**
      * This method writes a string of bytes to the target I2C address. This
      * transfer does not utilize the FPGA and can be done prior to configuration.
      *
@@ -714,5 +749,31 @@ enum RequestCode {
     WriteI2C,
     WriteToPipeIn,
     WriteToBlockPipeIn,
-    CloseDevice
+    CloseDevice,
+    ReadRegisters,
+    WriteRegisters,
+    ClearFPGAConfiguration,
+    FlashEraseSector,
+    FlashWrite,
+    FlashRead,
+    //Device Settings Requests
+    DeviceSettingsList,
+    DeviceSettingsSave,
+    DeviceSettingsDelete,
+    DeviceSettingsSetInteger,
+    DeviceSettingsSetString,
+    DeviceSettingsGetInteger,
+    DeviceSettingsGetString,
+    GetDeviceSensors,
+    ConfigureFPGAFromMemoryWithReset,
+    ConfigureFPGAFromFlash,
+    GetFPGAResetProfile,
+    SetFPGAResetProfile,
+    LoadDefaultPLLConfiguration,
+    GetPLL22150Configuration,
+    SetPLL22150Configuration,
+    GetEepromPLL22150Configuration,
+    SetEepromPLL22150Configuration,
+    GetUsb3DeviceInfoPrivate,
+    GetUsbFPXDeviceInfoPrivate
 }
