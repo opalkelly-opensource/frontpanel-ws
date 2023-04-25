@@ -7,6 +7,8 @@ import { ErrorCode, FrontPanelError } from './error';
 import { AsyncWebSocket, IReply } from './ws-async';
 import { FrontPanelClient, RequestCode } from './frontpanel-client';
 import { DeviceSettings } from './device-settings';
+import { FPGAResetProfile, FPGAConfigurationMethod } from './fpga-reset-profile';
+import { FrontPanelCodec } from './frontpanel-codec';
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
@@ -296,6 +298,63 @@ export class FrontPanel {
 
         await this.client.sendRequest(RequestCode.ConfigureFPGA, buf);
     }
+
+    /**
+     * Configures the device with the given firmware data and reset profile.
+     *
+     * @param buf Contains firmware data.
+     * @oaram reset Specifies the reset profile to use.
+     */
+    public async configureFPGAWithReset(buf: Uint8Array, reset: FPGAResetProfile): Promise<void> {
+        // (Re)configuring the devices resets all wire/trigger values.
+        this._resetValues();
+
+        const parameters: any[] = FrontPanelCodec.encodeFPGAResetProfile(reset);
+
+        await this.client.sendRequest(RequestCode.ConfigureFPGAWithReset, buf, parameters);
+    }
+
+    /**
+     * Configures the device with data stored in flash memory.
+     *
+     * @param configIndex Reserved for future use.
+     */
+    public async configureFPGAFromFlash(configIndex: number): Promise<void> {
+        // (Re)configuring the devices resets all wire/trigger values.
+        this._resetValues();
+
+        await this.client.sendRequest(RequestCode.ConfigureFPGAFromFlash, configIndex);
+    }
+
+    /**
+     * Clears the FPGA configuration.
+     */
+    public async clearFPGAConfiguration(): Promise<void> {
+        await this.client.sendRequest(RequestCode.ClearFPGAConfiguration);
+    }
+
+    /**
+     * Retrieves the FPGA reset profile.
+     * 
+     * @param method.
+     */
+    public async getFPGAResetProfile(method: FPGAConfigurationMethod): Promise<FPGAResetProfile> {
+        const reply: IReply = await this.client.sendRequest(RequestCode.GetFPGAResetProfile, method);
+
+        return FrontPanelCodec.decodeFPGAResetProfile(reply.data);
+    }
+
+    /**
+     * Sets the FPGA reset profile.
+     * 
+     * @param method.
+     */
+    public async setFPGAResetProfile(method: FPGAConfigurationMethod, profile: FPGAResetProfile): Promise<void> {
+        const parameters: any[] = FrontPanelCodec.encodeFPGAResetProfile(profile);
+
+        await this.client.sendRequest(RequestCode.SetFPGAResetProfile, method, parameters);
+    }
+
 
     /**
      * Activates a given trigger.

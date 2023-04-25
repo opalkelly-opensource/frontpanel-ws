@@ -171,7 +171,7 @@ export enum RequestCode {
     DeviceSettingsGetInteger,
     DeviceSettingsGetString,
     GetDeviceSensors,
-    ConfigureFPGAFromMemoryWithReset,
+    ConfigureFPGAWithReset,
     ConfigureFPGAFromFlash,
     GetFPGAResetProfile,
     SetFPGAResetProfile,
