@@ -6,6 +6,7 @@ import { IDeviceInfo } from './device-info';
 import { ErrorCode, FrontPanelError } from './error';
 import { AsyncWebSocket, IReply } from './ws-async';
 import { FrontPanelClient, RequestCode } from './frontpanel-client';
+import { DeviceSettings } from './device-settings';
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
@@ -199,6 +200,16 @@ export class FrontPanel {
             hasQuadConfigFlash: info.data[26]
         };
         return result;
+    }
+
+    /**
+     * Creates an object providing an interface to Device Settings.
+     *
+     * @returns [[DeviceSettings]] object providing access to Device Settings.
+     */
+    public getDeviceSettings(): DeviceSettings {
+        const deviceSettings = new DeviceSettings(this.client);
+        return deviceSettings;
     }
 
     /**
