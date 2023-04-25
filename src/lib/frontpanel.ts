@@ -5,6 +5,7 @@
 import { IDeviceInfo } from './device-info';
 import { ErrorCode, FrontPanelError } from './error';
 import { AsyncWebSocket, IReply } from './ws-async';
+import { FrontPanelClient, RequestCode } from './frontpanel-client';
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
@@ -23,18 +24,6 @@ export const FIRST_PIPEIN_ENDPOINT = 0x80;
 export const LAST_PIPEIN_ENDPOINT = 0x9f;
 export const FIRST_PIPEOUT_ENDPOINT = 0xa0;
 export const LAST_PIPEOUT_ENDPOINT = 0xbf;
-const PROTOCOL_VERSION = 19;
-
-function makeError(e: any, msg: string) {
-    const code = e instanceof FrontPanelError ? e.code : ErrorCode.Failed;
-    const errorMsg =
-        e instanceof FrontPanelError
-            ? e.reason
-            : e instanceof Error
-            ? e.message
-            : (e as string);
-    return new FrontPanelError(code, `${msg} with error ${errorMsg}`);
-}
 
 /**
  * This is the class that encapsulates the functionality of the FPGA
@@ -42,7 +31,7 @@ function makeError(e: any, msg: string) {
  * endpoints.
  */
 export class FrontPanel {
-    private readonly ws: AsyncWebSocket;
+    private readonly client: FrontPanelClient;
 
     // The values passed to updateWireIns() or retrieved from
     // update{Wire,Trigger}Outs().
@@ -59,10 +48,11 @@ export class FrontPanel {
      * @param parameters Parameters that must include the server address.
      */
     constructor(parameters: IConstructParameters) {
-        this.ws = new AsyncWebSocket(
+        const socket = new AsyncWebSocket(
             parameters.server,
             parameters.allowSelfSigned === true
         );
+        this.client = new FrontPanelClient(socket);
         this.wireInValues = new Array<number>(
             LAST_WIREIN_ENDPOINT - FIRST_WIREIN_ENDPOINT + 1
         );
@@ -85,7 +75,7 @@ export class FrontPanel {
      * this property becomes `true`.
      */
     public get isConnected(): boolean {
-        return this.ws.isOpened;
+        return this.client.isConnected;
     }
 
     /**
@@ -97,11 +87,7 @@ export class FrontPanel {
      * See [[isConnected]].
      */
     public async connect(): Promise<void> {
-        try {
-            await this.ws.open();
-        } catch (e) {
-            throw makeError(e, 'Failed to connect');
-        }
+        return this.client.connect();
     }
 
     /**
@@ -111,11 +97,7 @@ export class FrontPanel {
      * connection is being closed.
      */
     public async disconnect(code?: number): Promise<void> {
-        try {
-            await this.ws.close(code);
-        } catch (e) {
-            throw makeError(e, 'Failed to disconnect');
-        }
+        return this.client.disconnect(code);
     }
 
     /**
@@ -126,11 +108,7 @@ export class FrontPanel {
      * connection.
      */
     public async waitForServer(): Promise<IReply> {
-        try {
-            return this.ws.waitForServer();
-        } catch (e) {
-            throw makeError(e, 'Failed to wait for the server reply');
-        }
+        return this.client.waitForServer();
     }
 
     /**
@@ -147,13 +125,7 @@ export class FrontPanel {
      * @returns List of available devices in case of successful login.
      */
     public async login(username: string, password: string): Promise<string[]> {
-        const devices = await this._sendRequest(
-            RequestCode.Login,
-            PROTOCOL_VERSION,
-            username,
-            password
-        );
-        return devices.data;
+        return this.client.login(username, password);
     }
 
     /**
@@ -165,7 +137,7 @@ export class FrontPanel {
      * @param device One of the devices returned from [[login]].
      */
     public async openDevice(device: string): Promise<void> {
-        await this._sendRequest(RequestCode.Open, device);
+        await this.client.sendRequest(RequestCode.Open, device);
     }
 
     /**
@@ -175,7 +147,7 @@ export class FrontPanel {
      * after calling this function.
      */
     public async closeDevice(): Promise<void> {
-        await this._sendRequest(RequestCode.CloseDevice);
+        await this.client.sendRequest(RequestCode.CloseDevice);
     }
 
     /**
@@ -184,7 +156,7 @@ export class FrontPanel {
      * @returns [[IDeviceInfo]] object containing device characteristics.
      */
     public async getDeviceInfo(): Promise<IDeviceInfo> {
-        const info = await this._sendRequest(RequestCode.GetDeviceInfo);
+        const info = await this.client.sendRequest(RequestCode.GetDeviceInfo);
         const result: Required<IDeviceInfo> = {
             deviceID: info.data[0],
             serialNumber: info.data[1],
@@ -233,7 +205,7 @@ export class FrontPanel {
      * Returns true if FrontPanel-3 is firmware-supported.
      */
     public async isFrontPanel3Supported(): Promise<boolean> {
-        const reply = await this._sendRequest(
+        const reply = await this.client.sendRequest(
             RequestCode.IsFrontPanel3Supported
         );
         return reply.data;
@@ -252,7 +224,7 @@ export class FrontPanel {
      * @param interval Polling interval (in milliseconds).
      */
     public async setBTPipePollingInterval(interval: number): Promise<void> {
-        await this._sendRequest(RequestCode.SetBTPipePollingInterval, interval);
+        await this.client.sendRequest(RequestCode.SetBTPipePollingInterval, interval);
     }
 
     /**
@@ -264,7 +236,7 @@ export class FrontPanel {
      * @param str A string containing the new Device ID.
      */
     public async setDeviceID(str: string): Promise<void> {
-        await this._sendRequest(RequestCode.SetDeviceID, str);
+        await this.client.sendRequest(RequestCode.SetDeviceID, str);
     }
 
     /**
@@ -280,14 +252,14 @@ export class FrontPanel {
      * @param timeout Timeout duration specified in milliseconds.
      */
     public async setTimeout(timeout: number): Promise<void> {
-        await this._sendRequest(RequestCode.SetTimeout, timeout);
+        await this.client.sendRequest(RequestCode.SetTimeout, timeout);
     }
 
     /**
      * Returns the length of the last transfer (successful or not).
      */
     public async getLastTransferLength(): Promise<number> {
-        const reply = await this._sendRequest(
+        const reply = await this.client.sendRequest(
             RequestCode.GetLastTransferLength
         );
         return reply.data;
@@ -299,7 +271,7 @@ export class FrontPanel {
      * comes from the FrontPanel Host Interface.
      */
     public async resetFPGA(): Promise<void> {
-        await this._sendRequest(RequestCode.ResetFPGA);
+        await this.client.sendRequest(RequestCode.ResetFPGA);
     }
 
     /**
@@ -311,14 +283,14 @@ export class FrontPanel {
         // (Re)configuring the devices resets all wire/trigger values.
         this._resetValues();
 
-        await this._sendRequest(RequestCode.ConfigureFPGA, buf);
+        await this.client.sendRequest(RequestCode.ConfigureFPGA, buf);
     }
 
     /**
      * Activates a given trigger.
      */
     public async activateTriggerIn(epAddr: number, bit: number): Promise<void> {
-        await this._sendRequest(RequestCode.ActivateTriggerIn, epAddr, bit);
+        await this.client.sendRequest(RequestCode.ActivateTriggerIn, epAddr, bit);
     }
 
 
@@ -329,7 +301,7 @@ export class FrontPanel {
      * @param length Length of data (in bytes).
      */
     public async flashRead(addr: number, length: number): Promise<Uint8Array> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.FlashRead,
             addr,
             length
@@ -353,7 +325,7 @@ export class FrontPanel {
      * @param length Length of data (in bytes).
      */
     public async readI2C(addr: number, length: number): Promise<Uint8Array> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.ReadI2C,
             addr,
             length
@@ -369,7 +341,7 @@ export class FrontPanel {
         blockSize: number,
         length: number
     ): Promise<Uint8Array> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.ReadFromBlockPipeOut,
             epAddr,
             blockSize,
@@ -385,7 +357,7 @@ export class FrontPanel {
         epAddr: number,
         length: number
     ): Promise<Uint8Array> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.ReadFromPipeOut,
             epAddr,
             length
@@ -417,7 +389,7 @@ export class FrontPanel {
         name: string,
         code: string
     ): Promise<void> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.LoadScript,
             engine,
             name,
@@ -436,7 +408,7 @@ export class FrontPanel {
         name: string,
         ...args: any
     ): Promise<any[]> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.RunScriptFunction,
             engine,
             name,
@@ -454,7 +426,7 @@ export class FrontPanel {
      * Destroys the script engine earlier loaded in [[loadScript]] function.
      */
     public async destroyScriptEngine(engine: number): Promise<void> {
-        await this._sendRequest(RequestCode.DestroyScriptEngine, engine);
+        await this.client.sendRequest(RequestCode.DestroyScriptEngine, engine);
     }
 
     /**
@@ -463,7 +435,7 @@ export class FrontPanel {
      * is enabled and endpoint functionality is available.
      */
     public async isFrontPanelEnabled(): Promise<boolean> {
-        const reply = await this._sendRequest(RequestCode.IsFrontPanelEnabled);
+        const reply = await this.client.sendRequest(RequestCode.IsFrontPanelEnabled);
         return reply.data;
     }
 
@@ -544,7 +516,7 @@ export class FrontPanel {
      * Transfers current Wire In values to the FPGA.
      */
     public async updateWireIns(): Promise<void> {
-        await this._sendRequest(RequestCode.UpdateWireIns, this.wireInValues);
+        await this.client.sendRequest(RequestCode.UpdateWireIns, this.wireInValues);
     }
 
     /**
@@ -564,7 +536,7 @@ export class FrontPanel {
         const numTriggerOuts =
             LAST_TRIGGEROUT_ENDPOINT - FIRST_TRIGGEROUT_ENDPOINT + 1;
 
-        const result = await this._sendRequest(RequestCode.UpdateAllOuts);
+        const result = await this.client.sendRequest(RequestCode.UpdateAllOuts);
         const values = result.data as number[];
         if (values.length !== numWireOuts + numTriggerOuts) {
             throw new FrontPanelError(
@@ -585,7 +557,7 @@ export class FrontPanel {
      * @param addr Flash memory address.
      */
     public async flashEraseSector(addr: number): Promise<void> {
-        await this._sendRequest(RequestCode.FlashEraseSector, addr);
+        await this.client.sendRequest(RequestCode.FlashEraseSector, addr);
     }
 
     /**
@@ -595,7 +567,7 @@ export class FrontPanel {
      * @param buf Data to be written.
      */
     public async flashWrite(addr: number, buf: Uint8Array): Promise<void> {
-        await this._sendRequest(RequestCode.FlashWrite, addr, buf);
+        await this.client.sendRequest(RequestCode.FlashWrite, addr, buf);
     }
 
     /**
@@ -614,7 +586,7 @@ export class FrontPanel {
      * @param buf Data to be written.
      */
     public async writeI2C(addr: number, buf: Uint8Array): Promise<void> {
-        await this._sendRequest(RequestCode.WriteI2C, addr, buf);
+        await this.client.sendRequest(RequestCode.WriteI2C, addr, buf);
     }
 
     /**
@@ -625,7 +597,7 @@ export class FrontPanel {
         blockSize: number,
         buf: Uint8Array
     ): Promise<number> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.WriteToBlockPipeIn,
             epAddr,
             blockSize,
@@ -641,7 +613,7 @@ export class FrontPanel {
         epAddr: number,
         buf: Uint8Array
     ): Promise<number> {
-        const result = await this._sendRequest(
+        const result = await this.client.sendRequest(
             RequestCode.WriteToPipeIn,
             epAddr,
             buf
@@ -652,7 +624,7 @@ export class FrontPanel {
     private async _updateWireOuts(): Promise<number[]> {
         const numWireOuts = LAST_WIREOUT_ENDPOINT - FIRST_WIREOUT_ENDPOINT + 1;
 
-        const result = await this._sendRequest(RequestCode.UpdateWireOuts);
+        const result = await this.client.sendRequest(RequestCode.UpdateWireOuts);
         if (result.data.length !== numWireOuts) {
             throw new FrontPanelError(
                 ErrorCode.Failed,
@@ -668,7 +640,7 @@ export class FrontPanel {
         const numTriggerOuts =
             LAST_TRIGGEROUT_ENDPOINT - FIRST_TRIGGEROUT_ENDPOINT + 1;
 
-        const result = await this._sendRequest(RequestCode.UpdateTriggerOuts);
+        const result = await this.client.sendRequest(RequestCode.UpdateTriggerOuts);
         if (result.data.length !== numTriggerOuts) {
             throw new FrontPanelError(
                 ErrorCode.Failed,
@@ -684,19 +656,6 @@ export class FrontPanel {
         this.wireInValues.fill(0);
         this.wireOutValues.fill(0);
         this.triggerOutValues.fill(0);
-    }
-
-    private async _sendRequest(
-        req: RequestCode,
-        ...args: any
-    ): Promise<IReply> {
-        try {
-            const request = [req].concat(args);
-            const reply = await this.ws.send(...request);
-            return reply;
-        } catch (e) {
-            throw makeError(e, `Request ${RequestCode[req]} failed`);
-        }
     }
 }
 
@@ -720,60 +679,3 @@ export interface IConstructParameters {
     allowSelfSigned?: boolean;
 }
 
-// FPOIP request constants.
-enum RequestCode {
-    Login = 1,
-    Open,
-    GetDeviceInfo,
-    GetDeviceInfoPrivate,
-    GetHostInterfaceWidth, // Deprecated.
-    IsFrontPanel3Supported,
-    SetBTPipePollingInterval,
-    SetDeviceID,
-    SetTimeout,
-    GetLastTransferLength,
-    ResetFPGA,
-    ActivateTriggerIn,
-    ReadI2C,
-    ReadFromBlockPipeOut,
-    ReadFromPipeOut,
-    ConfigureFPGA,
-    LoadScript,
-    RunScriptFunction,
-    DestroyScriptEngine,
-    IsFrontPanelEnabled,
-    UpdateWireIns,
-    UpdateWireOuts,
-    UpdateTriggerOuts,
-    UpdateAllOuts,
-    WriteI2C,
-    WriteToPipeIn,
-    WriteToBlockPipeIn,
-    CloseDevice,
-    ReadRegisters,
-    WriteRegisters,
-    ClearFPGAConfiguration,
-    FlashEraseSector,
-    FlashWrite,
-    FlashRead,
-    //Device Settings Requests
-    DeviceSettingsList,
-    DeviceSettingsSave,
-    DeviceSettingsDelete,
-    DeviceSettingsSetInteger,
-    DeviceSettingsSetString,
-    DeviceSettingsGetInteger,
-    DeviceSettingsGetString,
-    GetDeviceSensors,
-    ConfigureFPGAFromMemoryWithReset,
-    ConfigureFPGAFromFlash,
-    GetFPGAResetProfile,
-    SetFPGAResetProfile,
-    LoadDefaultPLLConfiguration,
-    GetPLL22150Configuration,
-    SetPLL22150Configuration,
-    GetEepromPLL22150Configuration,
-    SetEepromPLL22150Configuration,
-    GetUsb3DeviceInfoPrivate,
-    GetUsbFPXDeviceInfoPrivate
-}
