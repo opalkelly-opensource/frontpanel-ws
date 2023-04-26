@@ -3,6 +3,7 @@ import { FPGAResetProfile } from "./fpga-reset-profile";
 import { RegisterEntryList, RegisterEntry } from "./frontpanel-registers";
 import { TriggerEntryList, TriggerEntry } from "./frontpanel-triggers";
 import { WireEndpointBlock, WireValue } from "./frontpanel-wires";
+import { PLL22150Configuration } from "./pll22150-configuration";
 
 
 export class FrontPanelCodec {
@@ -51,6 +52,38 @@ export class FrontPanelCodec {
         }
 
         return data;
+    }
+
+    public static encodePLL22150Configuration(configuration: PLL22150Configuration): any[] {
+        const parameters: any[] = [];
+
+        parameters[0] = configuration.reference;
+        parameters[1] = configuration.isExternalOscillatorEnabled;
+        parameters[2] = configuration.crystalLoad;
+
+        parameters[3] = configuration.vcoP;
+        parameters[4] = configuration.vcoQ;
+
+        parameters[5] = configuration.divider1Source;
+        parameters[6] = configuration.divider1;
+
+        parameters[7] = configuration.divider2Source;
+        parameters[8] = configuration.divider2;
+
+        const outputs: any[] = [];
+
+        for (let outputIndex = 0; outputIndex < PLL22150Configuration.OUTPUT_COUNT; outputIndex++) {
+            const output: any[] = [];
+
+            output[0] = configuration.getOutputSource(outputIndex);
+            output[1] = configuration.isOutputEnabled(outputIndex);
+
+            outputs[outputIndex] = output;
+        }
+
+        parameters[9] = outputs;
+
+        return parameters;
     }
 
     // Decode Methods
@@ -113,5 +146,25 @@ export class FrontPanelCodec {
         }
 
         return sensors;
+    }
+
+    public static decodePLL22150Configuration(data: any[]): PLL22150Configuration {
+
+        const configuration: PLL22150Configuration = new PLL22150Configuration();
+
+        configuration.setReference(data[0], data[1]);
+        configuration.crystalLoad = data[2];
+        configuration.setVCOParameters(data[3], data[4]);
+        configuration.setDivider1(data[5], data[6]);
+        configuration.setDivider2(data[7], data[8]);
+
+        const outputs = data[9];
+
+        for (let outputIndex = 0; outputIndex < PLL22150Configuration.OUTPUT_COUNT; outputIndex++) {
+            configuration.setOutputSource(outputIndex, outputs[outputIndex][0]);
+            configuration.setOutputEnable(outputIndex, outputs[outputIndex][1]);
+        }
+
+        return configuration;
     }
 }

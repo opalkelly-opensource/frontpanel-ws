@@ -10,6 +10,7 @@ import { DeviceSettings } from './device-settings';
 import { FPGAResetProfile, FPGAConfigurationMethod } from './fpga-reset-profile';
 import { FrontPanelCodec } from './frontpanel-codec';
 import { IDeviceSensor } from './device-sensor';
+import { PLL22150Configuration } from './pll22150-configuration'
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
@@ -224,6 +225,57 @@ export class FrontPanel {
         const reply = await this.client.sendRequest(RequestCode.GetDeviceSensors);
         const deviceSensors: IDeviceSensor[] = FrontPanelCodec.decodeDeviceSensors(reply.data);
         return deviceSensors;
+    }
+
+    /**
+     * Sets the default configuration for the device PLL.
+     */
+    public async loadDefaultPLLConfiguration(): Promise<void> {
+        await this.client.sendRequest(RequestCode.LoadDefaultPLLConfiguration);
+    }
+
+    /**
+     * Sets the configuration for the device PLL22150.
+     *
+     * @param configuration PLL22150 configuration.
+     */
+    public async setPLL22150Configuration(configuration: PLL22150Configuration): Promise<void> {
+        const parameters: any[] = FrontPanelCodec.encodePLL22150Configuration(configuration);
+
+        await this.client.sendRequest(RequestCode.SetPLL22150Configuration, parameters);
+    }
+
+    /**
+     * Retrieves the configuration for the device PLL22150.
+     *
+     * @returns [[IPLL22150Configuration]] PLL configuration.
+     */
+    public async getPLL22150Configuration(): Promise<PLL22150Configuration> {
+        const reply = await this.client.sendRequest(RequestCode.GetPLL22150Configuration);
+
+        return FrontPanelCodec.decodePLL22150Configuration(reply.data);
+    }
+
+    /**
+     * Sets the eeprom configuration for the device PLL22150.
+     *
+     * @param configuration PLL22150 configuration.
+     */
+    public async setEepromPLL22150Configuration(configuration: PLL22150Configuration): Promise<void> {
+        const parameters: any[] = FrontPanelCodec.encodePLL22150Configuration(configuration);
+
+        await this.client.sendRequest(RequestCode.SetEepromPLL22150Configuration, parameters);
+    }
+
+    /**
+     * Retrieves the eeprom configuration for the device PLL22150.
+     *
+     * @returns [[IPLL22150Configuration]] PLL configuration.
+     */
+    public async getEepromPLL22150Configuration(): Promise<PLL22150Configuration> {
+        const reply = await this.client.sendRequest(RequestCode.GetEepromPLL22150Configuration);
+
+        return FrontPanelCodec.decodePLL22150Configuration(reply.data);
     }
 
     /**

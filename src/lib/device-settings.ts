@@ -30,7 +30,7 @@ export class DeviceSettings {
         await this.client.sendRequest(RequestCode.DeviceSettingsSetInteger, name, value);
     }
 
-    public async list(): Promise<string> {
+    public async list(): Promise<string[]> {
         const reply = await this.client.sendRequest(RequestCode.DeviceSettingsList);
         return reply.data;
     }
