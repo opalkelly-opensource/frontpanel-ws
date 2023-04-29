@@ -190,6 +190,8 @@ describe('Configure FPGA with Reset Profile', () => {
     });
 
     it('Configure FPGA with Reset Profile', async function () {
+        this.timeout(20000);
+
         // Clear the FPGA Configuration
         fixture.fp.clearFPGAConfiguration();
 
@@ -238,8 +240,10 @@ describe('Configure FPGA with Reset Profile', () => {
     });
 
     it('Configure FPGA with Reset Profile specifying the config file location', async function () {
+        this.timeout(0);
+
         // Clear the FPGA Configuration.
-        fixture.fp.clearFPGAConfiguration();
+        await fixture.fp.clearFPGAConfiguration();
 
         expect(await fixture.fp.isFrontPanelEnabled()).to.be.false;
 
@@ -248,19 +252,42 @@ describe('Configure FPGA with Reset Profile', () => {
             BITFILE_FRONTPANEL_TEST,
             fixture.devInfo.productName
         );
-        const data = new Uint8Array(fs.readFileSync(bitfilePath));
+
+        let bitfileContents: Buffer = fs.readFileSync(bitfilePath);
+
+        // Find the start sequence.
+        const searchLength: number = Math.min(1000, bitfileContents.length);
+
+        let startIndex = 0;
+
+        for (let byteIndex = 0; (byteIndex < (searchLength - 4)); byteIndex++) {
+            if ((bitfileContents[byteIndex] = 0xff) && (bitfileContents[byteIndex + 1] = 0xff) && (bitfileContents[byteIndex + 2] = 0xff) && (bitfileContents[byteIndex + 3] = 0xff)) {
+                startIndex = byteIndex;
+                break;
+            }
+        }
 
         // Write the FPGA Configuration to Flash Memory
+        const configFileData: Uint8Array = bitfileContents.slice(startIndex);
+
+        const paddingByteCount: number = fixture.devInfo.flashSystem.pageSize - (configFileData.length % fixture.devInfo.flashSystem.pageSize);
+
+        const padding = new Uint8Array(paddingByteCount);
+        const data = new Uint8Array(configFileData.length + paddingByteCount);
+
+        data.set(configFileData);
+        data.set(padding, configFileData.length);
+
         const address = fixture.devInfo.flashSystem.minUserSector * fixture.devInfo.flashSystem.sectorSize;
 
-        fixture.fp.flashWrite(address, data);
+        await fixture.fp.flashWrite(address, data);
 
         // Setup Test Reset Profile.
         const testProfile: FPGAResetProfile = new FPGAResetProfile();
 
         testProfile.magic = FPGAResetProfile.FPGA_RESETPROFILE_MAGIC;
         testProfile.configFileLocation = address;
-        testProfile.configFileLength = data.length;
+        testProfile.configFileLength = configFileData.length;
 
         testProfile.doneWaitUS = 100;
         testProfile.resetWaitUS = 300;
@@ -281,14 +308,14 @@ describe('Configure FPGA with Reset Profile', () => {
         testProfile.triggerEntries.addEntry(testProfile.triggerEntries.baseAddress + 0, 0xff00ff00);
 
         // Configure the FPGA with the Test Reset Profile.
-        fixture.fp.setFPGAResetProfile(FPGAConfigurationMethod.NVRAM, testProfile);
+        await fixture.fp.setFPGAResetProfile(FPGAConfigurationMethod.NVRAM, testProfile);
 
-        fixture.fp.resetFPGA();
+        await fixture.fp.resetFPGA();
 
         expect(await fixture.fp.isFrontPanelEnabled()).to.be.true;
 
         // Clear the FPGA Configuration
-        fixture.fp.clearFPGAConfiguration();
+        await fixture.fp.clearFPGAConfiguration();
 
         expect(await fixture.fp.isFrontPanelEnabled()).to.be.false;
     });
