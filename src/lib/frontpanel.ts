@@ -11,12 +11,14 @@ import { FPGAResetProfile, FPGAConfigurationMethod } from './fpga-reset-profile'
 import { FrontPanelCodec } from './frontpanel-codec';
 import { IDeviceSensor } from './device-sensor';
 import { PLL22150Configuration } from './pll22150-configuration'
+import { RegisterEntry, RegisterAddress, RegisterValue } from './frontpanel-registers';
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
 export const MAX_SECURITY_DATA_LENGTH = 64;
 export const MAX_ENDPOINTS = 256;
 export const MAX_COMPONENTS = 256;
+export const REGISTER_COUNT = 256;
 export const FIRST_WIREIN_ENDPOINT = 0x00;
 export const LAST_WIREIN_ENDPOINT = 0x1f;
 export const FIRST_WIREOUT_ENDPOINT = 0x20;
@@ -500,6 +502,22 @@ export class FrontPanel {
     }
 
     /**
+     * Reads a set of registers.
+     *
+     */
+    public async readRegisters(addresses: RegisterAddress[]): Promise<RegisterEntry[]> {
+        const result = await this.client.sendRequest(RequestCode.ReadRegisters, addresses);
+
+        const registers: RegisterEntry[] = []
+
+        for (let addressIndex = 0; addressIndex < addresses.length; addressIndex++) {
+            registers[addressIndex] = [addresses[addressIndex], result.data[addressIndex]];
+        }
+
+        return registers;
+    }
+
+    /**
      * Gets the value of a particular Wire In from the internal wire data structure.
      */
     public getWireInValue(epAddr: number): number {
@@ -721,6 +739,23 @@ export class FrontPanel {
      */
     public async writeI2C(addr: number, buf: Uint8Array): Promise<void> {
         await this.client.sendRequest(RequestCode.WriteI2C, addr, buf);
+    }
+
+    /**
+     * Writes a set of registers.
+     * 
+     * @param registers
+     */
+    public async writeRegisters(entries: RegisterEntry[]): Promise<void> {
+        const addresses: RegisterAddress[] = [];
+        const values: RegisterValue[] = [];
+
+        for (let entryIndex = 0; entryIndex < entries.length; entryIndex++) {
+            addresses[entryIndex] = entries[entryIndex][0];
+            values[entryIndex] = entries[entryIndex][1];
+        }
+
+        await this.client.sendRequest(RequestCode.WriteRegisters, addresses, values);
     }
 
     /**
