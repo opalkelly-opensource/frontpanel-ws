@@ -141,6 +141,16 @@ export interface IDeviceInfo {
      * True if the device flash has quad SPI I/O.
      */
     hasQuadConfigFlash: boolean;
+
+    /**
+     * True if the device supports Device Settings.
+     */
+    isDeviceSettingsSupported: boolean;
+
+    /**
+     * True if the device supports Device Sensors.
+     */
+    isDeviceSensorsSupported: boolean;
 }
 
 export enum ProductID {

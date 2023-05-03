@@ -203,7 +203,9 @@ export class FrontPanel {
             interfaceCount: info.data[23],
             interfaceIndex: info.data[24],
             configuresFromSystemFlash: info.data[25],
-            hasQuadConfigFlash: info.data[26]
+            hasQuadConfigFlash: info.data[26],
+            isDeviceSettingsSupported: info.data[27],
+            isDeviceSensorsSupported: info.data[28]
         };
         return result;
     }
