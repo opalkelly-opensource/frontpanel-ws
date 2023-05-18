@@ -48,15 +48,15 @@ export class TriggerEntryList {
                     retval = true;
                 }
                 else {
-                    retval = false;     //ERROR: Invalid Address
+                    retval = false;     // ERROR: Invalid Address
                 }
             }
             else {
-                retval = false;     //ERROR: Invalid Address
+                retval = false;     // ERROR: Invalid Address
             }
         }
         else {
-            retval = false;     //ERROR: Trigger Entry Capacity Exceeded
+            retval = false;     // ERROR: Trigger Entry Capacity Exceeded
         }
 
         return retval;

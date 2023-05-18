@@ -44,11 +44,11 @@ export class WireEndpointBlock {
                 retval = true;
             }
             else {
-                retval = false;     //ERROR: Invalid Address
+                retval = false;     // ERROR: Invalid Address
             }
         }
         else {
-            retval = false;     //ERROR: Invalid Address
+            retval = false;     // ERROR: Invalid Address
         }
 
         return retval;
@@ -66,11 +66,11 @@ export class WireEndpointBlock {
                 retval = this._wireValues[wireIndex];
             }
             else {
-                retval = 0;     //ERROR: Invalid Address
+                retval = 0;     // ERROR: Invalid Address
             }
         }
         else {
-            retval = 0;     //ERROR: Invalid Address
+            retval = 0;     // ERROR: Invalid Address
         }
 
         return retval;

@@ -371,7 +371,7 @@ export class FrontPanel {
      * Configures the device with the given firmware data and reset profile.
      *
      * @param buf Contains firmware data.
-     * @oaram reset Specifies the reset profile to use.
+     * @param reset Indicates which reset profile should be set.
      */
     public async configureFPGAWithReset(buf: Uint8Array, reset: FPGAResetProfile): Promise<void> {
         // (Re)configuring the devices resets all wire/trigger values.
@@ -404,7 +404,7 @@ export class FrontPanel {
     /**
      * Retrieves the FPGA reset profile.
      * 
-     * @param method.
+     * @param method Indicates which reset profile should be retrieved.
      */
     public async getFPGAResetProfile(method: FPGAConfigurationMethod): Promise<FPGAResetProfile> {
         const reply: IReply = await this.client.sendRequest(RequestCode.GetFPGAResetProfile, method);
@@ -415,7 +415,7 @@ export class FrontPanel {
     /**
      * Sets the FPGA reset profile.
      * 
-     * @param method.
+     * @param method Indicates which reset profile should be set.
      */
     public async setFPGAResetProfile(method: FPGAConfigurationMethod, profile: FPGAResetProfile): Promise<void> {
         const parameters: any[] = FrontPanelCodec.encodeFPGAResetProfile(profile);
@@ -505,7 +505,9 @@ export class FrontPanel {
 
     /**
      * Reads a set of registers.
-     *
+     * 
+     * @param addresses Set of register addresses for the registers to be read.
+     * @returns Set of register address and value entries.
      */
     public async readRegisters(addresses: RegisterAddress[]): Promise<RegisterEntry[]> {
         const result = await this.client.sendRequest(RequestCode.ReadRegisters, addresses);
@@ -746,7 +748,7 @@ export class FrontPanel {
     /**
      * Writes a set of registers.
      * 
-     * @param registers
+     * @param registers Set of register address and value entries.
      */
     public async writeRegisters(entries: RegisterEntry[]): Promise<void> {
         const addresses: RegisterAddress[] = [];

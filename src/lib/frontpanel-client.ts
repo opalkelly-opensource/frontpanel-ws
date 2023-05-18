@@ -19,12 +19,11 @@ export class FrontPanelClient {
     private readonly socket: AsyncWebSocket;
 
     /**
-     * Initializes the object with the remote server address.
+     * Initializes the object with the asynchronous websocket to use
+     * for communicating with the remote server.
      *
-     * The only mandatory parameter is `server` which specifies the remote
-     * server, running FPoIP server, to connect to.
-     *
-     * @param parameters Parameters that must include the server address.
+     * @param socket Websocket to use for communicating with the FrontPanel
+     * over IP Server.
      */
     constructor(socket: AsyncWebSocket) {
         this.socket = socket;
@@ -111,6 +110,14 @@ export class FrontPanelClient {
         return devices.data;
     }
 
+    /**
+     * Sends a request with a set of arguments to the server and returns
+     * the reply received in response to the request.
+     * 
+     * @param req RequestCode specifying the type of request to be sent.
+     * @param args Set of arguments that correspond to the request.
+     * @returns Reply received from the server in response to the request.
+     */
     public async sendRequest(
         req: RequestCode,
         ...args: any
@@ -162,7 +169,6 @@ export enum RequestCode {
     FlashEraseSector,
     FlashWrite,
     FlashRead,
-    //Device Settings Requests
     DeviceSettingsList,
     DeviceSettingsSave,
     DeviceSettingsDelete,
