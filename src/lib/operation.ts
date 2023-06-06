@@ -6,7 +6,7 @@ import { FrontPanelError } from './error';
 
 export class AsyncOperation<T> {
     public readonly promise: Promise<T>;
-    private resolveCb: (value?: T) => void;
+    private resolveCb: (value: T) => void;
     private rejectCb: (reason?: FrontPanelError) => void;
 
     constructor(operation: () => void) {
@@ -18,7 +18,7 @@ export class AsyncOperation<T> {
         };
         this.promise = new Promise<T>(
             (
-                resolve: (value?: T) => void,
+                resolve: (value: T) => void,
                 reject: (reason?: FrontPanelError) => void
             ) => {
                 this.resolveCb = resolve;
@@ -27,7 +27,7 @@ export class AsyncOperation<T> {
             }
         );
     }
-    public resolve(value?: T): void {
+    public resolve(value: T): void {
         this.resolveCb(value);
     }
     public reject(reason?: FrontPanelError): void {

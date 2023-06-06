@@ -6,6 +6,7 @@
  * FrontPanel API return codes.
  */
 export enum ErrorCode {
+    NoError = 0,
     Failed = -1,
     Timeout = -2,
     DoneNotHigh = -3,

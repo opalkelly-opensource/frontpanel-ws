@@ -18,9 +18,7 @@ enum ReadyState {
     OPEN,
     CLOSING,
     CLOSED
-}
-
-const NoError = 0;
+};
 
 // As a special case, server may send unsolicited replies with the session ID
 // and sequence number of 0. They indicate notifications about server events
@@ -363,7 +361,7 @@ export class AsyncWebSocket {
                 notification = elements[0];
             } else {
                 const errorCode: ErrorCode = elements[0];
-                if (errorCode !== NoError) {
+                if (errorCode !== ErrorCode.NoError) {
                     let errorMessage = `Reply #${replyId} failed`;
 
                     // Append the error description, if it isn't an empty string.
@@ -419,7 +417,11 @@ export class AsyncWebSocket {
                 }
             }
         } catch (e) {
-            this._rejectWithError(e);
+            if (e instanceof FrontPanelError) {
+                this._rejectWithError(e);
+            } else {
+                this._rejectWithError(new FrontPanelError(ErrorCode.Failed, (<Error>e).message));
+            }
         }
     }
 
