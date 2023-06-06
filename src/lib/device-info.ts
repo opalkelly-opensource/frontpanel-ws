@@ -141,16 +141,28 @@ export interface IDeviceInfo {
      * True if the device flash has quad SPI I/O.
      */
     hasQuadConfigFlash: boolean;
+}
+
+export interface IDeviceInfoPrivate {
+    /**
+     *  The USB vendor ID for USB devices, 0 for the others.
+     * */
+    readonly usbVendorID: number;
+
+    /**
+     * USB product ID for USB devices, 0 for the others.
+     */
+    readonly usbProductID: number;
 
     /**
      * True if the device supports Device Settings.
      */
-    isDeviceSettingsSupported: boolean;
+    readonly hasDeviceSettingsSupport: boolean;
 
     /**
      * True if the device supports Device Sensors.
      */
-    isDeviceSensorsSupported: boolean;
+    readonly hasDeviceSensorsSupport: boolean;
 }
 
 export enum ProductID {

@@ -186,6 +186,5 @@ export enum RequestCode {
     SetPLL22150Configuration,
     GetEepromPLL22150Configuration,
     SetEepromPLL22150Configuration,
-    GetUsb3DeviceInfoPrivate,
-    GetUsbFPXDeviceInfoPrivate
+    OpenDevice
 }

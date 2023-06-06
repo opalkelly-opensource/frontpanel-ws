@@ -1,3 +1,4 @@
+import { IDeviceInfoPrivate } from "./device-info";
 import { IDeviceSensor } from "./device-sensor";
 import { FPGAResetProfile } from "./fpga-reset-profile";
 import { RegisterEntryList, RegisterEntry } from "./frontpanel-registers";
@@ -87,6 +88,17 @@ export class FrontPanelCodec {
     }
 
     // Decode Methods
+    public static decodeDeviceInfoPrivate(data: any[]): IDeviceInfoPrivate {
+        const devInfo: Required<IDeviceInfoPrivate> = {
+            usbVendorID: data[0],
+            usbProductID: data[1],
+            hasDeviceSettingsSupport: data[2],
+            hasDeviceSensorsSupport: data[3]
+        };
+
+        return devInfo;
+    }
+
     public static decodeFPGAResetProfile(data: any[]): FPGAResetProfile {
 
         const profile: FPGAResetProfile = new FPGAResetProfile();

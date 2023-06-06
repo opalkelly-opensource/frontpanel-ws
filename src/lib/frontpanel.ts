@@ -2,7 +2,7 @@
  * The FrontPanel Web API implements the client part of FPoIP protocol.
  */
 
-import { IDeviceInfo } from './device-info';
+import { IDeviceInfo, IDeviceInfoPrivate } from './device-info';
 import { ErrorCode, FrontPanelError } from './error';
 import { AsyncWebSocket, IReply } from './ws-async';
 import { FrontPanelClient, RequestCode } from './frontpanel-client';
@@ -40,6 +40,8 @@ export const LAST_PIPEOUT_ENDPOINT = 0xbf;
 export class FrontPanel {
     private readonly client: FrontPanelClient;
 
+    private deviceInfoPrivate: IDeviceInfoPrivate;
+
     // The values passed to updateWireIns() or retrieved from
     // update{Wire,Trigger}Outs().
     private wireInValues: number[];
@@ -60,6 +62,12 @@ export class FrontPanel {
             parameters.allowSelfSigned === true
         );
         this.client = new FrontPanelClient(socket);
+        this.deviceInfoPrivate = {
+            usbVendorID: 0,
+            usbProductID: 0,
+            hasDeviceSettingsSupport: false,
+            hasDeviceSensorsSupport: false
+        };
         this.wireInValues = new Array<number>(
             LAST_WIREIN_ENDPOINT - FIRST_WIREIN_ENDPOINT + 1
         );
@@ -144,7 +152,8 @@ export class FrontPanel {
      * @param device One of the devices returned from [[login]].
      */
     public async openDevice(device: string): Promise<void> {
-        await this.client.sendRequest(RequestCode.Open, device);
+        const reply = await this.client.sendRequest(RequestCode.OpenDevice, device);
+        this.deviceInfoPrivate = FrontPanelCodec.decodeDeviceInfoPrivate(reply.data);
     }
 
     /**
@@ -203,11 +212,18 @@ export class FrontPanel {
             interfaceCount: info.data[23],
             interfaceIndex: info.data[24],
             configuresFromSystemFlash: info.data[25],
-            hasQuadConfigFlash: info.data[26],
-            isDeviceSettingsSupported: info.data[27],
-            isDeviceSensorsSupported: info.data[28]
+            hasQuadConfigFlash: info.data[26]
         };
         return result;
+    }
+
+    /**
+     * Indicates whether Device Settings are supported.
+     * 
+     * @returns true if Device Settings are supported.
+     */
+    public hasDeviceSettingsSupport(): boolean {
+        return this.deviceInfoPrivate.hasDeviceSettingsSupport;
     }
 
     /**
@@ -218,6 +234,15 @@ export class FrontPanel {
     public getDeviceSettings(): DeviceSettings {
         const deviceSettings = new DeviceSettings(this.client);
         return deviceSettings;
+    }
+
+    /**
+     * Indicates whether Device Sensors are supported.
+     * 
+     * @returns true if Device Sensors are supported.
+     */
+    public hasDeviceSensorsSupport(): boolean {
+        return this.deviceInfoPrivate.hasDeviceSensorsSupport;
     }
 
     /**
