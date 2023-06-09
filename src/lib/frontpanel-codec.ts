@@ -1,3 +1,4 @@
+import { IDeviceSensor } from "./device-sensor";
 import { FPGAResetProfile } from "./fpga-reset-profile";
 import { RegisterEntryList, RegisterEntry } from "./frontpanel-registers";
 import { TriggerEntryList, TriggerEntry } from "./frontpanel-triggers";
@@ -91,5 +92,26 @@ export class FrontPanelCodec {
         }
 
         return profile;
+    }
+
+    public static decodeDeviceSensors(data: any[]): IDeviceSensor[] {
+
+        const sensors: Required<IDeviceSensor>[] = [];
+
+        for (let sensorIndex = 0; sensorIndex < data.length; sensorIndex++) {
+            const sensorData: any[] = data[sensorIndex];
+            sensors[sensorIndex] = {
+                id: sensorData[0],
+                type: sensorData[1],
+                name: sensorData[2],
+                description: sensorData[3],
+                min: sensorData[4],
+                max: sensorData[5],
+                step: sensorData[6],
+                value: sensorData[7]
+            }
+        }
+
+        return sensors;
     }
 }

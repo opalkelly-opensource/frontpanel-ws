@@ -9,6 +9,7 @@ import { FrontPanelClient, RequestCode } from './frontpanel-client';
 import { DeviceSettings } from './device-settings';
 import { FPGAResetProfile, FPGAConfigurationMethod } from './fpga-reset-profile';
 import { FrontPanelCodec } from './frontpanel-codec';
+import { IDeviceSensor } from './device-sensor';
 
 export const MAX_SERIALNUMBER_LENGTH = 10;
 export const MAX_DEVICEID_LENGTH = 32;
@@ -212,6 +213,17 @@ export class FrontPanel {
     public getDeviceSettings(): DeviceSettings {
         const deviceSettings = new DeviceSettings(this.client);
         return deviceSettings;
+    }
+
+    /**
+     * Retrieves the list of Device Sensors.
+     *
+     * @returns [[IDeviceSensors[]]] list of Device Sensors.
+     */
+    public async getDeviceSensors(): Promise<IDeviceSensor[]> {
+        const reply = await this.client.sendRequest(RequestCode.GetDeviceSensors);
+        const deviceSensors: IDeviceSensor[] = FrontPanelCodec.decodeDeviceSensors(reply.data);
+        return deviceSensors;
     }
 
     /**
