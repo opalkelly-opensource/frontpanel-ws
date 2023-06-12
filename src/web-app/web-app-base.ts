@@ -220,7 +220,7 @@ export abstract class FrontPanelWebAppBase {
      * Updates the application UI when a connection or disconnection has
      * occurred.
      */
-    protected abstract async _updateConnectionStatus(): Promise<void>;
+    protected abstract _updateConnectionStatus(): Promise<void>;
 
     private async _httpRequest(
         path: string,

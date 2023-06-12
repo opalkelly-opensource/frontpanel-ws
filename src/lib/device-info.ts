@@ -143,6 +143,28 @@ export interface IDeviceInfo {
     hasQuadConfigFlash: boolean;
 }
 
+export interface IDeviceInfoPrivate {
+    /**
+     *  The USB vendor ID for USB devices, 0 for the others.
+     * */
+    readonly usbVendorID: number;
+
+    /**
+     * USB product ID for USB devices, 0 for the others.
+     */
+    readonly usbProductID: number;
+
+    /**
+     * True if the device supports Device Settings.
+     */
+    readonly hasDeviceSettingsSupport: boolean;
+
+    /**
+     * True if the device supports Device Sensors.
+     */
+    readonly hasDeviceSensorsSupport: boolean;
+}
+
 export enum ProductID {
     PRODUCT_UNKNOWN,
     PRODUCT_XEM3001V1,
@@ -198,7 +220,11 @@ export enum ProductID {
     PRODUCT_XEM8350KU115,
     PRODUCT_XEM8350SECONDARY,
     PRODUCT_XEM7310MTA75,
-    PRODUCT_XEM7310MTA200
+    PRODUCT_XEM7310MTA200,
+    PRODUCT_XEM9025,
+    PRODUCT_XEM8320AU25P,
+    PRODUCT_XEM8310AU25P,
+    PRODUCT_FPX9301
 }
 
 export enum DeviceInterface {
